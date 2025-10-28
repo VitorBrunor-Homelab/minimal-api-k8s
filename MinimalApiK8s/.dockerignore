@@ -1,0 +1,3 @@
+# Ignora as pastas de build e debug do .NET
+bin/
+obj/

@@ -1,0 +1,11 @@
+C:\Projetos\MinimalApiK8s\publish\MinimalApiK8s.exe
+C:\Projetos\MinimalApiK8s\publish\appsettings.Development.json
+C:\Projetos\MinimalApiK8s\publish\appsettings.json
+C:\Projetos\MinimalApiK8s\publish\MinimalApiK8s.dll
+C:\Projetos\MinimalApiK8s\publish\MinimalApiK8s.deps.json
+C:\Projetos\MinimalApiK8s\publish\MinimalApiK8s.runtimeconfig.json
+C:\Projetos\MinimalApiK8s\publish\MinimalApiK8s.pdb
+C:\Projetos\MinimalApiK8s\publish\Microsoft.AspNetCore.OpenApi.dll
+C:\Projetos\MinimalApiK8s\publish\Microsoft.OpenApi.dll
+C:\Projetos\MinimalApiK8s\publish\Pipelines.Sockets.Unofficial.dll
+C:\Projetos\MinimalApiK8s\publish\StackExchange.Redis.dll
