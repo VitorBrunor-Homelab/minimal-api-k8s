@@ -45,9 +45,4 @@ jobs:
             
         # 5 - Update e Commit
         - name: Update and Commit Manifests
-            run: cd manifests &&
-                 sed -i "s|image: .*|image: ${{ secrets.HARBOR_URL }}/test-api/minimal-api:${{ github.sha }}|g" minimal-api/deployment.yaml && 
-                 git config user.name "GitHub Actions" && 
-                 git config user.email "actions@github.com" && 
-                 git commit -am "Update image for minimal-api to tag ${{ github.sha }}" && 
-                 git push
+            run: cd manifests && sed -i "s|image: .*|image: ${{ secrets.HARBOR_URL }}/test-api/minimal-api:${{ github.sha }}|g" minimal-api/deployment.yaml && git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git commit -am "Update image for minimal-api to tag ${{ github.sha }}" && git push
