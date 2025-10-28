@@ -1,0 +1,58 @@
+# .github/workflows/build-and-deploy.yml
+
+name: Build e Deploy com K3s via GitOps
+
+# Gatilho
+on:
+    push:
+        branches: [ "main" ]
+
+jobs:
+    build-and-push:
+        # A job roda com meu runner auto-hospedado
+        runs-on: self-hosted
+        
+        steps:
+        # 1 - Baixa o código da API para o runner
+        - name: Checkout API Repository
+          uses: actions/checkout@v4
+        
+        # 2 - Faz login no Harbor
+        - name: Login no Harbor
+          uses: docker/login-action@v3
+          with:
+            registry: ${{ secrets.HARBOR_URL }}
+            username: ${{ secrets.HARBOR_USER }}
+            password: ${{ secrets.HARBOR_PASSWORD }}
+            
+        # 3 - Constrói e envia a imagem para o Harbor
+        # As tags serão o hash do commit do git
+        - name:  Build e push da Docker imagem
+          id: build-and-push
+          uses: docker/build-push-actions@v5
+          with:
+            context: .
+            push: true
+            tags: ${{ secrets.HARBOR_URL }}/test-api/minimal-api:{{ github.sha }}  
+            
+        # 4 - Baixa o repositório de Manifestos
+        - name: Checkout Repositorios de Manifestos
+          uses: actions/checkout@v4
+          with:
+            repository: VitorBrunor-Homelab/homelab-k8s-manifests
+            token: ${{ secrets.GH_PAT }}
+            path: manifests 
+            
+        # 5 - Atualiza a tag da imagem no arquivo de deployment
+        - name: Commit e Push das mudancas no Manifestos
+          run: |
+          sed -i "s|image: .*|image: ${{ secrets.HARBOR_URL }}/test-api/minimal-api:${{ github.sha }}|g" manifests/minimal-api/deployment.yaml 
+          
+        # 6 - Faz o commit e push daa alteração no repositório de manifestos 
+        - name: Commit and push manifest changes
+          run: |
+          cd manifests
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git commit -am "Update da imagem para minimal-api to tag ${{ github.sha }}"
+          git push
