@@ -20,6 +20,10 @@ jobs:
           registry: ${{ secrets.HARBOR_URL }}
           username: ${{ secrets.HARBOR_USER }}
           password: ${{ secrets.HARBOR_PASSWORD }}
+          
+      # Adiciona a configuração do buildx    
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       # 3 - Constrói e envia a imagem para o Harbor
       # As tags serão o hash do commit do git
