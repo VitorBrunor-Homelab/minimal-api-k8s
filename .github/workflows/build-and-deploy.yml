@@ -29,11 +29,11 @@ jobs:
         # As tags serão o hash do commit do git
         - name:  Build e push da Docker imagem
           id: build-and-push
-          uses: docker/build-push-actions@v5
+          uses: docker/build-push-action@v5
           with:
-            context: .
+            context: ./MinimalApiK8s
             push: true
-            tags: ${{ secrets.HARBOR_URL }}/test-api/minimal-api:{{ github.sha }}  
+            tags: ${{ secrets.HARBOR_URL }}/test-api/minimal-api:${{ github.sha }}  
             
         # 4 - Baixa o repositório de Manifestos
         - name: Checkout Repositorios de Manifestos
@@ -43,16 +43,11 @@ jobs:
             token: ${{ secrets.GH_PAT }}
             path: manifests 
             
-        # 5 - Atualiza a tag da imagem no arquivo de deployment
-        - name: Commit e Push das mudancas no Manifestos
-          run: |
-          sed -i "s|image: .*|image: ${{ secrets.HARBOR_URL }}/test-api/minimal-api:${{ github.sha }}|g" manifests/minimal-api/deployment.yaml 
-          
-        # 6 - Faz o commit e push daa alteração no repositório de manifestos 
-        - name: Commit and push manifest changes
-          run: |
-          cd manifests
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git commit -am "Update da imagem para minimal-api to tag ${{ github.sha }}"
-          git push
+        # 5 - Update e Commit
+        - name: Update and Commit Manifests
+            cd manifests &&
+            sed -i "s|image: .*|image: ${{ secrets.HARBOR_URL }}/test-api/minimal-api:${{ github.sha }}|g" minimal-api/deployment.yaml && 
+            git config user.name "GitHub Actions" && 
+            git config user.email "actions@github.com" && 
+            git commit -am "Update image for minimal-api to tag ${{ github.sha }}" && 
+            git push
