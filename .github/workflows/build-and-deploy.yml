@@ -37,6 +37,9 @@ jobs:
           push: true
           tags: ${{ secrets.HARBOR_URL }}/test-api/minimal-api:${{ github.sha }}
           add-hosts: harbor.homelab.local:192.168.1.8
+          build-args: |
+            http_proxy=
+            https_proxy=
 
       # 4 - Baixa o repositório de Manifestos
       - name: Checkout Repositorios de Manifestos
