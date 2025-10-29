@@ -8,41 +8,34 @@ jobs:
   build-and-push:
     runs-on: self-hosted
 
+    # Define a tag da imagem uma vez para usar nos passos seguintes
+    env:
+      IMAGE_TAG: ${{ secrets.HARBOR_URL }}/test-api/minimal-api:${{ github.sha }}
+
     steps:
       # 1 - Baixa o código da API para o runner
       - name: Checkout API Repository
         uses: actions/checkout@v4
 
-      # 2 - Faz login no Harbor
+      # 2 - Faz login no Harbor (isso continua igual, é confiável)
       - name: Login no Harbor
         uses: docker/login-action@v3
         with:
           registry: ${{ secrets.HARBOR_URL }}
           username: ${{ secrets.HARBOR_USER }}
           password: ${{ secrets.HARBOR_PASSWORD }}
-          
-      # Adiciona a configuração do buildx    
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host 
 
-      # 3 - Constrói e envia a imagem para o Harbor
-      # As tags serão o hash do commit do git
-      - name: Build e push da Docker imagem
-        id: build-and-push
-        uses: docker/build-push-action@v5
-        with:
-          context: ./MinimalApiK8s
-          push: true
-          tags: ${{ secrets.HARBOR_URL }}/test-api/minimal-api:${{ github.sha }}
-          add-hosts: harbor.homelab.local:192.168.1.8
-          no-cache: true
-          build-args: |
-            http_proxy=
-            https_proxy=
+      # 3 - Constrói a imagem usando o comando direto do Docker
+      - name: Build da imagem com Docker (comando direto)
+        run: |
+          docker build -t ${{ env.IMAGE_TAG }} ./MinimalApiK8s
 
-      # 4 - Baixa o repositório de Manifestos
+      # 4 - Envia a imagem para o Harbor usando o comando direto
+      - name: Push da imagem para o Harbor (comando direto)
+        run: |
+          docker push ${{ env.IMAGE_TAG }}
+
+      # 5 - Baixa o repositório de Manifestos (continua igual)
       - name: Checkout Repositorios de Manifestos
         uses: actions/checkout@v4
         with:
@@ -50,11 +43,11 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           path: manifests
 
-      # 5 - Update e Commit
+      # 6 - Update e Commit (continua igual)
       - name: Update and Commit Manifests
         run: |
           cd manifests
-          sed -i "s|image: .*|image: ${{ secrets.HARBOR_URL }}/test-api/minimal-api:${{ github.sha }}|g" minimal-api/deployment.yaml
+          sed -i "s|image: .*|image: ${{ env.IMAGE_TAG }}|g" minimal-api/deployment.yaml
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git commit -am "Update image for minimal-api to tag ${{ github.sha }}"
