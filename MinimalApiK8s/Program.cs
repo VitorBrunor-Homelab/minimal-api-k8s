@@ -40,7 +40,7 @@ app.MapGet("/", (IConnectionMultiplexer redis, HttpContext context) => { // Adic
         return Results.Text($"[DO CACHE]: {valorDoCache}");
     }
 
-    string valorDoBanco = $"Aplicação .NET 9 mínima rodando no K3s! Sucesso! (Gerado em: {DateTime.Now:HH:mm:ss})";
+    string valorDoBanco = $"Aplicacao .NET 9 minima rodando no K3s! Sucesso! (Gerado em: {DateTime.Now:HH:mm:ss})";
     db.StringSet(cacheKey, valorDoBanco, TimeSpan.FromSeconds(10));
     return Results.Text($"[DO BANCO DE DADOS]: {valorDoBanco}");
 });
