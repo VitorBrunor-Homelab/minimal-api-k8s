@@ -14,7 +14,7 @@ jobs:
 
     steps:
       # 1 - Baixa o código da API para o runner
-      - name: Checkout API Repository
+      - name: Checkout da API Repository
         uses: actions/checkout@v4
 
       # 2 - Faz login no Harbor (isso continua igual, é confiável)
@@ -26,17 +26,17 @@ jobs:
           password: ${{ secrets.HARBOR_PASSWORD }}
 
       # 3 - Constrói a imagem usando o comando direto do Docker
-      - name: Build da imagem com Docker (comando direto)
+      - name: Build da imagem com Docker
         run: |
           docker build -t ${{ env.IMAGE_TAG }} ./MinimalApiK8s
 
       # 4 - Envia a imagem para o Harbor usando o comando direto
-      - name: Push da imagem para o Harbor (comando direto)
+      - name: Push da imagem para o Harbor
         run: |
           docker push ${{ env.IMAGE_TAG }}
 
       # 5 - Baixa o repositório de Manifestos (continua igual)
-      - name: Checkout Repositorios de Manifestos
+      - name: Checkout do repositorio de Manifestos
         uses: actions/checkout@v4
         with:
           repository: VitorBrunor-Homelab/homelab-k8s-manifests
@@ -44,7 +44,7 @@ jobs:
           path: manifests
 
       # 6 - Update e Commit (continua igual)
-      - name: Update and Commit Manifests
+      - name: Update e commit dos Manifestos
         run: |
           cd manifests
           sed -i "s|image: .*|image: ${{ env.IMAGE_TAG }}|g" minimal-api/deployment.yaml
