@@ -25,8 +25,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:7008", // Front Local
-                                             "http://front.homelab.local") // Front no K3s
+                          policy.WithOrigins()
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
