@@ -1,11 +1,21 @@
 using StackExchange.Redis;
-using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- PASSO 1: Configurar a conex�o com o Redis ---
-var redisConnectionString = "my-redis-master.redis:6379";
-var redisConnection = ConnectionMultiplexer.Connect(redisConnectionString);
+// --- PASSO 1: Configurar a conexão com o Redis ---
+
+// Tenta pegar a string de conexão das variáveis de ambiente (Kubernetes)
+// Se não encontrar, usa o valor padrão "redis:6379" com abortConnect=false para não crashar
+var connectionString = builder.Configuration.GetConnectionString("Redis") 
+                       ?? "redis:6379,abortConnect=false";
+
+// Log para ajudar no debug (aparece no 'kubectl logs')
+Console.WriteLine($"[LOG] Conectando no Redis: {connectionString}");
+
+Console.WriteLine("[LOG] ta rodando hein");
+
+// Cria a conexão e injeta como Singleton
+var redisConnection = ConnectionMultiplexer.Connect(connectionString);
 builder.Services.AddSingleton<IConnectionMultiplexer>(redisConnection);
 
 // --- PASSO 2: Configurar o CORS ---
@@ -15,8 +25,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:7008", // Ajuste para a porta do seu front local
-                                             "http://front.homelab.local")
+                          policy.WithOrigins("http://localhost:7008", // Front Local
+                                             "http://front.homelab.local") // Front no K3s
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
@@ -24,24 +34,26 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// --- PASSO 3: Ligar o CORS (A ORDEM CORRETA � AQUI!) ---
+// --- PASSO 3: Ligar o CORS ---
 app.UseCors(MyAllowSpecificOrigins);
 
 // --- PASSO 4: Definir os Endpoints ---
-app.MapGet("/", (IConnectionMultiplexer redis, HttpContext context) => { // Adicionado HttpContext
-
+app.MapGet("/", (IConnectionMultiplexer redis) => 
+{
     IDatabase db = redis.GetDatabase();
     string cacheKey = "minha-mensagem";
     string? valorDoCache = db.StringGet(cacheKey);
 
-    // Usando Results.Text para garantir o Content-Type
+    // Se tiver no cache, retorna rápido
     if (!string.IsNullOrEmpty(valorDoCache))
     {
         return Results.Text($"[DO CACHE]: {valorDoCache}");
     }
 
-    string valorDoBanco = $"Aplicacao .NET 9 minima rodando no K3s! Sucesso! (Gerado em: {DateTime.Now:HH:mm:ss})";
+    // Se não, gera novo valor e salva no cache por 10 segundos
+    string valorDoBanco = $"Aplicacao .NET rodando no K3s! Sucesso! (Gerado em: {DateTime.Now:HH:mm:ss})";
     db.StringSet(cacheKey, valorDoBanco, TimeSpan.FromSeconds(10));
+    
     return Results.Text($"[DO BANCO DE DADOS]: {valorDoBanco}");
 });
 
